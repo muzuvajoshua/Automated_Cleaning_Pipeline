@@ -1,0 +1,15 @@
+{
+    "teacher_model_path": "models/teacher_model.pth",
+    "confidence_threshold": 0.8,
+    "image_input_dir": "uploads",
+    "image_output_dir": "processed",
+    "log_dir": "logs",
+    "num_iterations": 2,
+    "batch_size": 16,
+    "image_size": [64, 64],
+    "manual_reviews_path": "reviews/manual_reviews.csv",
+    "enable_manual_review": true,
+    "save_samples": true,
+    "sample_interval": 100,
+    "database_path": "database/results.db"
+}

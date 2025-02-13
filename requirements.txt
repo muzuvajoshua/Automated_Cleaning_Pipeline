@@ -1,0 +1,11 @@
+flask
+flask-cors
+pillow
+werkzeug
+opencv-python-headless
+numpy
+imagehash
+scikit-image
+pandas
+torch
+scikit-learn

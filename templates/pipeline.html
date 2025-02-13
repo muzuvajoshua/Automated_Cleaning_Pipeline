@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher-Student Processing</title>
+    <script>
+        async function runPipeline() {
+            const inputDir = document.getElementById("input_dir").value;
+            const outputDir = document.getElementById("output_dir").value;
+            
+            const response = await fetch("/run_pipeline", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ input_dir: inputDir, output_dir: outputDir })
+            });
+
+            const result = await response.json();
+            document.getElementById("result").innerText = JSON.stringify(result, null, 2);
+        }
+    </script>
+</head>
+<body>
+    <h1>Teacher-Student Processing</h1>
+    <label for="input_dir">Input Directory:</label>
+    <input type="text" id="input_dir" placeholder="Enter input directory"><br><br>
+
+    <label for="output_dir">Output Directory:</label>
+    <input type="text" id="output_dir" placeholder="Enter output directory"><br><br>
+
+    <button onclick="runPipeline()">Run Pipeline</button>
+    <pre id="result"></pre>
+</body>
+</html>
