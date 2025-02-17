@@ -1,143 +1,86 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Processing Suite</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        .drag-area {
-            border: 2px dashed #4a5568;
-            min-height: 200px;
-        }
-        .drag-area.dragover {
-            background-color: #edf2f7;
-            border-color: #2b6cb0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automated Image Processing Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center mb-8">Image Processing Suite</h1>
-        
-        <!-- Upload Area -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="drag-area flex flex-col items-center justify-center p-8 rounded-lg mb-4">
-                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                </svg>
-                <p class="text-gray-600 text-center">Drag and drop images here or click to select files</p>
-                <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
+  <div id="root" class="container mx-auto py-8"></div>
+
+  <script type="text/babel">
+    const Dashboard = () => {
+      const [images, setImages] = React.useState([]);
+      const [total, setTotal] = React.useState(0);
+      const [error, setError] = React.useState(null);
+
+      // Fetch unprocessed images from the endpoint
+      const fetchImages = async () => {
+        try {
+          setError(null);
+          const response = await fetch('/list_images');
+          if (!response.ok) throw new Error("Failed to fetch images");
+          const data = await response.json();
+          setImages(data.images);
+          setTotal(data.total);
+        } catch (err) {
+          console.error(err);
+          setError("Error fetching images.");
+        }
+      };
+
+      // Poll the endpoint every 10 seconds to update the UI automatically.
+      React.useEffect(() => {
+        fetchImages();
+        const interval = setInterval(fetchImages, 10000); // 10 seconds refresh interval
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
+          <h1 className="text-2xl font-bold mb-4">Automated Image Processing Dashboard</h1>
+          <p className="text-gray-600 mb-4">
+            Unprocessed Images: {total}
+          </p>
+          
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
             </div>
-            
-            <!-- Processing Options -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Source</label>
-                    <input type="text" id="source" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          )}
+          
+          {total === 0 ? (
+            <p className="text-green-600">All images have been processed!</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {images.map((img, index) => (
+                <div key={index} className="relative group">
+                  <img 
+                    src={`/serve_image/${encodeURIComponent(img)}`}
+                    className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                    alt={img}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="%23cccccc"/></svg>';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-lg transition-opacity">
+                    <span className="text-white text-xs px-2 truncate">{img}</span>
+                  </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Relevance (0-1)</label>
-                    <input type="number" id="relevance" min="0" max="1" step="0.1" value="0.8" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
+              ))}
             </div>
-            
-            <button id="processBtn" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                Process Images
-            </button>
+          )}
         </div>
-        
-        <!-- Results Area -->
-        <div id="results" class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Results</h2>
-            <div id="processedImages" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-            <div id="processingStatus" class="mt-4 text-gray-600"></div>
-        </div>
-    </div>
+      );
+    };
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dragArea = document.querySelector('.drag-area');
-            const fileInput = document.getElementById('fileInput');
-            const processBtn = document.getElementById('processBtn');
-            const resultsArea = document.getElementById('processedImages');
-            const statusArea = document.getElementById('processingStatus');
-
-            // Drag and drop handlers
-            dragArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dragArea.classList.add('dragover');
-            });
-
-            dragArea.addEventListener('dragleave', () => {
-                dragArea.classList.remove('dragover');
-            });
-
-            dragArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dragArea.classList.remove('dragover');
-                handleFiles(e.dataTransfer.files);
-            });
-
-            dragArea.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
-
-            function handleFiles(files) {
-                // Preview logic here
-                statusArea.textContent = `Selected ${files.length} files`;
-            }
-
-            processBtn.addEventListener('click', async () => {
-                const files = fileInput.files;
-                if (!files.length) {
-                    alert('Please select files first');
-                    return;
-                }
-
-                const formData = new FormData();
-                for (let file of files) {
-                    formData.append('files[]', file);
-                }
-                formData.append('source', document.getElementById('source').value);
-                formData.append('relevance', document.getElementById('relevance').value);
-
-                statusArea.textContent = 'Processing...';
-                processBtn.disabled = true;
-
-                try {
-                    const response = await fetch('/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const results = await response.json();
-
-                    // Display results
-                    resultsArea.innerHTML = '';
-                    for (let [path, preview] of Object.entries(results.previews)) {
-                        const div = document.createElement('div');
-                        div.className = 'bg-gray-50 p-4 rounded-lg';
-                        div.innerHTML = `
-                            <img src="data:image/jpeg;base64,${preview}" class="w-full h-48 object-cover rounded-lg mb-2">
-                            <p class="text-sm text-gray-600">${path.split('/').pop()}</p>
-                        `;
-                        resultsArea.appendChild(div);
-                    }
-
-                    statusArea.textContent = `Processed ${results.processed.length} images successfully`;
-                } catch (error) {
-                    statusArea.textContent = 'Error processing images';
-                    console.error(error);
-                } finally {
-                    processBtn.disabled = false;
-                }
-            });
-        });
-    </script>
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<Dashboard />);
+  </script>
 </body>
 </html>

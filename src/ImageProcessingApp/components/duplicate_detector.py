@@ -1,5 +1,6 @@
 from PIL import Image
 import imagehash
+import logging
 
 class DuplicateDetector:
     def __init__(self, hash_size: int = 8, threshold: int = 5):
@@ -16,6 +17,8 @@ class DuplicateDetector:
         Check if image is a duplicate using perceptual hashing.
         Returns True if duplicate is found.
         """
+        # logging.getLogger(__name__).debug(f"Checking duplicate for {image_path}")
+
         current_hash = self.compute_hash(image)
 
         for stored_id, stored_hash in self.hash_dict.items():
