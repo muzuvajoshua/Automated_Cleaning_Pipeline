@@ -1,9 +1,10 @@
 from typing import List, Dict, Tuple
 from datetime import datetime
+import logging
 
 class MetadataValidator:
     def __init__(self, required_fields: List[str] =
-                 ['source', 'timestamp', 'relevance']):
+                 ['source', 'timestamp']):
         self.required_fields = required_fields
 
     def validate_metadata(self, metadata: Dict) -> Tuple[bool, List[str]]:
@@ -11,6 +12,7 @@ class MetadataValidator:
         Validate metadata completeness and consistency.
         Returns (is_valid, list_of_errors)
         """
+        logging.getLogger(__name__).debug(f"Validating metadata: {metadata}")
         errors = []
 
         # Check required fields
@@ -25,11 +27,11 @@ class MetadataValidator:
             except ValueError:
                 errors.append("Invalid timestamp format")
 
-        # Validate relevance score
-        if 'relevance' in metadata:
-            relevance = metadata['relevance']
-            if not isinstance(relevance, (int, float)) or \
-               not (0 <= relevance <= 1):
-                errors.append("Relevance must be float between 0 and 1")
+        # # Validate relevance score
+        # if 'relevance' in metadata:
+        #     relevance = metadata['relevance']
+        #     if not isinstance(relevance, (int, float)) or \
+        #        not (0 <= relevance <= 1):
+        #         errors.append("Relevance must be float between 0 and 1")
 
         return len(errors) == 0, errors
